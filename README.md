@@ -1,7 +1,151 @@
 # CamControl
-## Aplicación Web de Control de Cámaras
+## 🌐 Web Camera Control Application
 
-La estructura del proyecto para esta nueva versión optimizada es la siguiente:
+CamControl is a modern web application built with Python and Flask that enables full control of USB and integrated cameras.
+
+---
+
+## 📁 Project Structure
+
+```text
+CamControl/
+│
+├── app.py                 # Main Flask app script
+│
+├── templates/
+│   └── index.html         # UI template
+│
+├── captures/              # Auto-created folder for captures
+│
+└── requirements.txt       # Dependency file
+```
+
+---
+
+## 🧠 Structure Explanation
+
+### `app.py` – Application Core
+
+- Handles all Flask routes  
+- Detects and controls connected cameras  
+- Processes video frames  
+- Implements logic for capture (photo, video, timelapse)  
+- Manages system resources and prevents memory leaks  
+- Includes `--port` argument for manual port selection  
+
+---
+
+### `templates/index.html` – Full UI
+
+- Modern styles using Tailwind CSS  
+- Integrated CSS with advanced effects  
+- Full JavaScript for backend interaction  
+- Responsive design for camera control  
+- Filter previews with representative icons  
+
+---
+
+### `captures/` – Capture Directory
+
+- Created automatically when app starts  
+- Stores all photos, videos, timelapses  
+- Path can be changed from web UI  
+
+---
+
+### `requirements.txt` – Dependencies
+
+```text
+flask
+opencv-python
+numpy
+```
+
+---
+
+## ⚙️ Key Technical Features
+
+### Robust Resource Management
+
+- Thread-safe access with locks  
+- Proper cleanup on shutdown  
+- Error recovery with last valid frame  
+- Compatibility check for camera properties  
+
+---
+
+### Advanced Filter System
+
+- Original  
+- Grayscale  
+- Sepia  
+- Red  
+- Green  
+- Blue  
+- IR (simulated with color map)  
+- UV (simulated with HSV adjustment)  
+
+---
+
+### Performance Optimizations
+
+- Stream quality reduced to 85%  
+- Smart frame resizing  
+- Event-based updates (no polling)  
+- Separate threads for long captures (video, timelapse)  
+
+---
+
+### Enhanced User Experience
+
+- Visual status indicators  
+- Popup notifications  
+- Subtle action animations  
+- Filter preview with icons  
+- Dark theme with proper contrast  
+
+---
+
+## ▶️ How to Run
+
+### Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### Run the app with automatic port:
+```bash
+python app.py
+```
+
+### Or specify a port manually:
+```bash
+python app.py --port 5005
+```
+
+### Access in the browser:
+```text
+http://localhost:[port]
+```
+
+---
+
+## 🧩 Compatibility & Deployment
+
+This minimalist yet complete structure ensures smooth operation on **Windows, macOS, and Linux**, with proper system resource handling.
+
+The unified single-file HTML interface simplifies deployment while maintaining high levels of functionality and design.
+
+---
+
+# CamControl
+## 🌐 Aplicación Web de Control de Cámaras
+
+CamControl es una aplicación web moderna construida con Python y Flask que permite el control completo de cámaras USB e integradas.
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```text
 CamControl/
@@ -9,124 +153,127 @@ CamControl/
 ├── app.py                 # Script principal de la aplicación Flask
 │
 ├── templates/
-│   └── index.html          # Plantilla HTML con interfaz completa
+│   └── index.html         # Plantilla HTML con la interfaz completa
 │
-├── captures/               # Carpeta para almacenar fotos/videos (se crea automáticamente)
+├── captures/              # Carpeta para almacenar fotos/videos (se crea automáticamente)
 │
-└── requirements.txt        # Archivo de dependencias
+└── requirements.txt       # Archivo de dependencias
 ```
 
-## Explicación de la estructura:
+---
 
-### app.py - El corazón de la aplicación:
+## 🧠 Explicación de la Estructura
 
-Maneja todas las rutas de Flask
+### `app.py` – El Corazón de la Aplicación
 
-Gestiona la detección y control de cámaras
+- Maneja todas las rutas de Flask  
+- Gestiona la detección y control de cámaras  
+- Procesa los frames de video  
+- Implementa la lógica de captura (fotos, videos, timelapse)  
+- Administra los recursos del sistema y evita fugas de memoria  
+- Incluye argumento `--port` para especificar el puerto manualmente  
 
-Procesa los frames de video
+---
 
-Implementa la lógica de captura (fotos, videos, timelapse)
+### `templates/index.html` – Interfaz de Usuario Completa
 
-Administra los recursos y evita fugas de memoria
+- HTML con estilos modernos usando Tailwind CSS  
+- CSS integrado con efectos visuales avanzados  
+- JavaScript completo para interactuar con el backend  
+- Diseño responsive optimizado para control de cámara  
+- Previsualizaciones de filtros con íconos representativos  
 
-Incluye argumentos para especificar el puerto (--port)
+---
 
-### templates/index.html - Interfaz de usuario completa:
+### `captures/` – Directorio de Capturas
 
-HTML con Tailwind CSS para estilos modernos
+- Se crea automáticamente al iniciar la aplicación  
+- Almacena todas las fotos, videos y timelapses  
+- La ruta puede cambiarse desde la interfaz web  
 
-CSS integrado con efectos visuales avanzados
+---
 
-JavaScript completo para interactuar con el backend
+### `requirements.txt` – Dependencias
 
-Diseño responsive y optimizado para control de cámara
-
-Previsualizaciones de filtros con iconos representativos
-
-### captures/ - Directorio de capturas:
-
-Se crea automáticamente al iniciar la aplicación
-
-Almacena todas las fotos, videos y timelapses
-
-La ruta puede cambiarse desde la interfaz web
-
-### requirements.txt - Dependencias:
 ```text
 flask
 opencv-python
 numpy
 ```
 
-## Características técnicas clave:
+---
 
-### Manejo robusto de recursos:
+## ⚙️ Características Técnicas Clave
 
-Uso de locks para acceso seguro a la cámara en múltiples hilos
+### Manejo Robusto de Recursos
 
-Limpieza adecuada al cerrar la aplicación
+- Uso de locks para acceso seguro a la cámara en múltiples hilos  
+- Limpieza adecuada al cerrar la aplicación  
+- Recuperación de errores con el último frame válido  
+- Comprobación de compatibilidad de propiedades de cámara  
 
-Recuperación de errores con último frame válido
+---
 
-Comprobación de compatibilidad de propiedades de cámara
+### Sistema de Filtros Avanzado
 
-Sistema de filtros avanzado:
+- Original  
+- Escala de grises  
+- Sepia  
+- Rojo  
+- Verde  
+- Azul  
+- IR (simulado con mapa de colores)  
+- UV (simulado con ajuste HSV)  
 
-Original
+---
 
-Escala de grises
+### Optimizaciones de Rendimiento
 
-Sepia
+- Reducción de calidad de transmisión (85%)  
+- Redimensionamiento inteligente de frames  
+- Actualizaciones por eventos (no por polling)  
+- Hilos separados para capturas largas (video, timelapse)  
 
-Rojo
+---
 
-Verde
+### Experiencia de Usuario Mejorada
 
-Azul
+- Indicadores visuales de estado  
+- Notificaciones emergentes  
+- Animaciones sutiles para acciones  
+- Previsualización de filtros con íconos  
+- Diseño oscuro con contraste adecuado  
 
-IR (simulado con mapa de colores)
+---
 
-UV (simulado con ajuste HSV)
+## ▶️ Instrucciones de Ejecución
 
-### Optimizaciones de rendimiento:
-
-Reducción de calidad de transmisión (85%)
-
-Redimensionamiento inteligente de frames
-
-Actualizaciones por eventos (no por polling)
-
-Hilos separados para capturas largas (video, timelapse)
-
-### Experiencia de usuario mejorada:
-
-Indicadores visuales de estado
-
-Notificaciones emergentes
-
-Animaciones sutiles para acciones
-
-Previsualización de filtros con iconos
-
-Diseño oscuro con contraste adecuado
-
-## Instrucciones de ejecución:
-
-Instalar dependencias:
+### Instalar dependencias:
 ```bash
 pip install -r requirements.txt
 ```
-Ejecutar la aplicación (con búsqueda automática de puerto):
+
+### Ejecutar la aplicación (con búsqueda automática de puerto):
 ```bash
 python app.py
 ```
-O especificar puerto manualmente:
+
+### O especificar el puerto manualmente:
 ```bash
 python app.py --port 5005
 ```
-Acceder en el navegador:
+
+### Acceder desde el navegador:
 ```text
 http://localhost:[puerto]
 ```
-Esta estructura minimalista pero completa asegura un funcionamiento óptimo en Windows, macOS y Linux, con un manejo adecuado de permisos y recursos del sistema. La interfaz unificada en un solo archivo HTML simplifica el despliegue mientras mantiene un alto nivel de funcionalidad y diseño.
+
+---
+
+## 🧩 Compatibilidad y Despliegue
+
+Esta estructura minimalista pero completa asegura un funcionamiento óptimo en **Windows, macOS y Linux**, con un manejo adecuado de permisos y recursos del sistema.
+
+La interfaz unificada en un solo archivo HTML simplifica el despliegue, manteniendo un alto nivel de funcionalidad y diseño.
+
+---
