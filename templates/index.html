@@ -1,0 +1,970 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Cámaras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #f97316;
+            --primary-dark: #c2410c;
+            --dark: #020617;
+            --light: #f8fafc;
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+        
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .camera-preview {
+            background: linear-gradient(45deg, #1e293b, #0f172a);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #94a3b8;
+            background: #1e293b;
+            z-index: 5;
+        }
+        
+        #liveVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            z-index: 2;
+        }
+        
+        .control-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        
+        .control-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+            border: 2px solid white;
+        }
+        
+        .timelapse-active {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        }
+        
+        .recording-active {
+            animation: pulse-red 1.5s infinite;
+        }
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        .filter-option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #334155;
+        }
+        
+        .filter-option:hover {
+            transform: scale(1.05);
+            border-color: #64748b;
+        }
+        
+        .filter-option.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+        }
+        
+        .capture-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .capture-btn:hover {
+            transform: scale(1.08);
+        }
+        
+        .capture-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .floating-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            animation: slideIn 0.3s, fadeOut 0.5s 2.5s forwards;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #334155;
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+        
+        .input-field {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 8px;
+            padding: 0.75rem;
+            transition: all 0.2s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3);
+        }
+        
+        .select-field {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 8px;
+            padding: 0.75rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
+        
+        .select-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected {
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+        
+        .status-disconnected {
+            background: #ef4444;
+        }
+        
+        .filter-preview {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900">
+    <!-- Barra de navegación -->
+    <nav class="bg-orange-600 py-4 px-6 flex justify-between items-center shadow-lg sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-camera text-2xl text-white"></i>
+            <h1 class="text-2xl font-bold text-white">Control de Cámaras</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center px-3 py-1 bg-slate-800 rounded-full">
+                <span class="status-indicator" id="cameraStatusIndicator"></span>
+                <span id="cameraStatusText" class="text-sm">Desconectado</span>
+            </div>
+            <button id="settingsBtn" class="btn-primary py-2 px-4 rounded-lg flex items-center">
+                <i class="fas fa-cog mr-2"></i> Configuración
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Panel izquierdo - Controles -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Selección de cámara -->
+                <div class="control-card p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-orange-300">
+                        <i class="fas fa-video mr-2"></i> Seleccionar Cámara
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">Dispositivo:</span>
+                            <span id="camStatus" class="text-slate-400">Cargando...</span>
+                        </div>
+                        <select id="cameraSelect" class="select-field w-full">
+                            <option value="">Cargando cámaras...</option>
+                        </select>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <button id="refreshCameras" class="btn-secondary py-2 px-4 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-sync-alt mr-2"></i> Actualizar
+                            </button>
+                            <button id="connectBtn" class="btn-primary py-2 px-4 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-power-off mr-2"></i> Conectar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolución -->
+                <div class="control-card p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-orange-300">
+                        <i class="fas fa-expand mr-2"></i> Resolución
+                    </h2>
+                    <select id="resolutionSelect" class="select-field w-full">
+                        <option value="640,480">640×480 (VGA)</option>
+                        <option value="1280,720" selected>1280×720 (HD)</option>
+                        <option value="1920,1080">1920×1080 (Full HD)</option>
+                        <option value="2560,1440">2560×1440 (2K)</option>
+                        <option value="3840,2160">3840×2160 (4K)</option>
+                    </select>
+                </div>
+
+                <!-- Filtros de color -->
+                <div class="control-card p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-orange-300">
+                        <i class="fas fa-palette mr-2"></i> Filtros de Color
+                    </h2>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="filter-option active" data-filter="none">
+                            <div class="filter-preview bg-gradient-to-r from-slate-300 to-slate-500">
+                                <i class="fas fa-sun text-slate-700"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">Original</p>
+                        </div>
+                        <div class="filter-option" data-filter="grayscale">
+                            <div class="filter-preview bg-gradient-to-r from-gray-500 to-gray-700">
+                                <i class="fas fa-moon text-gray-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">Grises</p>
+                        </div>
+                        <div class="filter-option" data-filter="sepia">
+                            <div class="filter-preview bg-gradient-to-r from-amber-700 to-amber-900">
+                                <i class="fas fa-seedling text-amber-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">Sepia</p>
+                        </div>
+                        <div class="filter-option" data-filter="red">
+                            <div class="filter-preview bg-gradient-to-r from-red-500 to-red-700">
+                                <i class="fas fa-heart text-red-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">Rojo</p>
+                        </div>
+                        <div class="filter-option" data-filter="green">
+                            <div class="filter-preview bg-gradient-to-r from-green-500 to-green-700">
+                                <i class="fas fa-leaf text-green-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">Verde</p>
+                        </div>
+                        <div class="filter-option" data-filter="blue">
+                            <div class="filter-preview bg-gradient-to-r from-blue-500 to-blue-700">
+                                <i class="fas fa-tint text-blue-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">Azul</p>
+                        </div>
+                        <div class="filter-option" data-filter="ir">
+                            <div class="filter-preview bg-gradient-to-r from-purple-500 via-pink-500 to-red-500">
+                                <i class="fas fa-fire text-yellow-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">IR</p>
+                        </div>
+                        <div class="filter-option" data-filter="uv">
+                            <div class="filter-preview bg-gradient-to-r from-violet-500 to-purple-700">
+                                <i class="fas fa-magic text-violet-300"></i>
+                            </div>
+                            <p class="text-center py-2 text-sm font-medium">UV</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel central - Vista previa -->
+            <div class="lg:col-span-3">
+                <div class="camera-preview">
+                    <div class="video-container">
+                        <div id="videoPlaceholder" class="video-placeholder">
+                            <i class="fas fa-camera text-6xl mb-4 text-slate-500"></i>
+                            <p class="text-xl font-medium">Vista previa de la cámara</p>
+                            <p class="text-sm mt-2 text-slate-400">Selecciona una cámara y haz clic en Conectar</p>
+                        </div>
+                        <img id="liveVideo" src="" class="hidden">
+                    </div>
+                    
+                    <div class="floating-controls">
+                        <button id="capturePhotoBtn" class="capture-btn bg-white text-slate-900 w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <button id="recordVideoBtn" class="capture-btn bg-red-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button id="timelapseBtn" class="capture-btn bg-purple-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controles de imagen -->
+                <div class="mt-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-orange-300">
+                        <i class="fas fa-sliders-h mr-2"></i> Ajustes de Imagen
+                    </h2>
+                    
+                    <div class="settings-grid">
+                        <!-- Brillo -->
+                        <div class="control-card p-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium">Brillo</span>
+                                <span id="brightnessValue" class="bg-orange-600 px-2 py-1 rounded text-xs">0</span>
+                            </div>
+                            <input type="range" min="-100" max="100" value="0" id="brightnessSlider" class="w-full slider-thumb">
+                        </div>
+                        
+                        <!-- Contraste -->
+                        <div class="control-card p-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium">Contraste</span>
+                                <span id="contrastValue" class="bg-orange-600 px-2 py-1 rounded text-xs">0</span>
+                            </div>
+                            <input type="range" min="-100" max="100" value="0" id="contrastSlider" class="w-full slider-thumb">
+                        </div>
+                        
+                        <!-- Saturación -->
+                        <div class="control-card p-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium">Saturación</span>
+                                <span id="saturationValue" class="bg-orange-600 px-2 py-1 rounded text-xs">0</span>
+                            </div>
+                            <input type="range" min="-100" max="100" value="0" id="saturationSlider" class="w-full slider-thumb">
+                        </div>
+                        
+                        <!-- Nitidez -->
+                        <div class="control-card p-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium">Nitidez</span>
+                                <span id="sharpnessValue" class="bg-orange-600 px-2 py-1 rounded text-xs">0</span>
+                            </div>
+                            <input type="range" min="-100" max="100" value="0" id="sharpnessSlider" class="w-full slider-thumb">
+                        </div>
+                        
+                        <!-- Exposición -->
+                        <div class="control-card p-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium">Exposición</span>
+                                <span id="exposureValue" class="bg-orange-600 px-2 py-1 rounded text-xs">0</span>
+                            </div>
+                            <input type="range" min="-10" max="10" step="0.1" value="0" id="exposureSlider" class="w-full slider-thumb">
+                        </div>
+                        
+                        <!-- Timestamp -->
+                        <div class="control-card p-4 flex items-center">
+                            <input type="checkbox" id="timestampToggle" class="mr-3 h-5 w-5 text-orange-600 rounded">
+                            <label for="timestampToggle" class="font-medium">Añadir fecha/hora</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuración de guardado -->
+                <div class="mt-6">
+                    <div class="control-card p-6">
+                        <h2 class="text-xl font-bold mb-4 flex items-center text-orange-300">
+                            <i class="fas fa-save mr-2"></i> Configuración de Guardado
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="font-medium mb-2">Nombre de archivo</h3>
+                                <div class="flex">
+                                    <input type="text" id="filenamePrefix" value="capture_" class="input-field w-full">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="font-medium mb-2">Carpeta destino</h3>
+                                <div class="flex">
+                                    <input type="text" id="savePath" value="captures" class="input-field rounded-r-none w-full">
+                                    <button id="browseBtn" class="btn-primary rounded-l-none px-4">
+                                        <i class="fas fa-folder-open"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="font-medium mb-2">Intervalo de timelapse (segundos)</h3>
+                                <div class="flex">
+                                    <input type="number" id="timelapseInterval" min="1" max="3600" value="5" class="input-field w-full">
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="font-medium mb-2">Duración del timelapse (segundos)</h3>
+                                <div class="flex">
+                                    <input type="number" id="timelapseDuration" min="1" max="21600" value="60" class="input-field w-full">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notificación -->
+    <div id="notification" class="notification hidden">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-700 text-white py-3 px-6 flex items-center">
+            <i class="fas fa-check-circle text-xl mr-3"></i>
+            <div>
+                <p id="notificationTitle" class="font-bold"></p>
+                <p id="notificationMessage" class="text-sm"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Variables de estado
+        let currentCameraId = null;
+        let isRecording = false;
+        let isTimelapseActive = false;
+        let isCameraConnected = false;
+        let videoStreamUrl = "{{ url_for('video_feed') }}";
+
+        // Elementos UI
+        const cameraSelect = document.getElementById('cameraSelect');
+        const refreshBtn = document.getElementById('refreshCameras');
+        const connectBtn = document.getElementById('connectBtn');
+        const camStatus = document.getElementById('camStatus');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const liveVideo = document.getElementById('liveVideo');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const filterOptions = document.querySelectorAll('.filter-option');
+        const cameraStatusIndicator = document.getElementById('cameraStatusIndicator');
+        const cameraStatusText = document.getElementById('cameraStatusText');
+        
+        // Sliders
+        const brightnessSlider = document.getElementById('brightnessSlider');
+        const contrastSlider = document.getElementById('contrastSlider');
+        const saturationSlider = document.getElementById('saturationSlider');
+        const sharpnessSlider = document.getElementById('sharpnessSlider');
+        const exposureSlider = document.getElementById('exposureSlider');
+        
+        // Valores de sliders
+        const brightnessValue = document.getElementById('brightnessValue');
+        const contrastValue = document.getElementById('contrastValue');
+        const saturationValue = document.getElementById('saturationValue');
+        const sharpnessValue = document.getElementById('sharpnessValue');
+        const exposureValue = document.getElementById('exposureValue');
+        
+        // Botones de captura
+        const capturePhotoBtn = document.getElementById('capturePhotoBtn');
+        const recordVideoBtn = document.getElementById('recordVideoBtn');
+        const timelapseBtn = document.getElementById('timelapseBtn');
+        
+        // Configuración de guardado
+        const filenamePrefix = document.getElementById('filenamePrefix');
+        const savePath = document.getElementById('savePath');
+        const browseBtn = document.getElementById('browseBtn');
+        const timelapseInterval = document.getElementById('timelapseInterval');
+        const timelapseDuration = document.getElementById('timelapseDuration');
+        const timestampToggle = document.getElementById('timestampToggle');
+        
+        // Notificación
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        
+        // Función para mostrar notificación
+        function showNotification(title, message) {
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Actualizar estado de la cámara
+        function updateCameraStatus(connected) {
+            isCameraConnected = connected;
+            if (connected) {
+                cameraStatusIndicator.className = 'status-indicator status-connected';
+                cameraStatusText.textContent = 'Conectado';
+                connectBtn.innerHTML = '<i class="fas fa-power-off mr-2"></i> Desconectar';
+            } else {
+                cameraStatusIndicator.className = 'status-indicator status-disconnected';
+                cameraStatusText.textContent = 'Desconectado';
+                connectBtn.innerHTML = '<i class="fas fa-power-off mr-2"></i> Conectar';
+                videoPlaceholder.classList.remove('hidden');
+                liveVideo.classList.add('hidden');
+            }
+        }
+        
+        // Cargar cámaras disponibles
+        function loadCameras() {
+            camStatus.textContent = 'Buscando cámaras...';
+            camStatus.className = 'text-yellow-400';
+            
+            fetch('/cameras')
+                .then(response => response.json())
+                .then(cameras => {
+                    cameraSelect.innerHTML = '';
+                    
+                    if (cameras.length === 0) {
+                        cameraSelect.innerHTML = '<option value="">No se encontraron cámaras</option>';
+                        camStatus.textContent = '0 cámaras disponibles';
+                        camStatus.className = 'text-red-400';
+                        updateCameraStatus(false);
+                        return;
+                    }
+                    
+                    cameras.forEach(cam => {
+                        const option = document.createElement('option');
+                        option.value = cam.id;
+                        option.textContent = cam.name;
+                        cameraSelect.appendChild(option);
+                    });
+                    
+                    camStatus.textContent = `${cameras.length} cámaras disponibles`;
+                    camStatus.className = 'text-green-400';
+                    
+                    if (cameras.length > 0) {
+                        currentCameraId = cameras[0].id;
+                        cameraSelect.value = currentCameraId;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cargando cámaras:', error);
+                    cameraSelect.innerHTML = '<option value="">Error al cargar cámaras</option>';
+                    camStatus.textContent = 'Error al cargar';
+                    camStatus.className = 'text-red-400';
+                    updateCameraStatus(false);
+                });
+        }
+        
+        // Conectar/desconectar cámara
+        function toggleCameraConnection() {
+            if (isCameraConnected) {
+                // Desconectar cámara
+                liveVideo.classList.add('hidden');
+                videoPlaceholder.classList.remove('hidden');
+                videoPlaceholder.innerHTML = `
+                    <i class="fas fa-camera text-6xl mb-4 text-slate-500"></i>
+                    <p class="text-xl font-medium">Cámara desconectada</p>
+                `;
+                updateCameraStatus(false);
+                showNotification('Cámara desconectada', 'La cámara se ha desconectado correctamente');
+                return;
+            }
+            
+            const selectedCameraId = cameraSelect.value;
+            if (!selectedCameraId) {
+                showNotification('Error', 'Selecciona una cámara primero');
+                return;
+            }
+            
+            // Mostrar estado de conexión
+            videoPlaceholder.innerHTML = `
+                <div class="text-center">
+                    <div class="inline-block relative">
+                        <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p class="mt-4 text-lg font-medium">Conectando a la cámara...</p>
+                </div>
+            `;
+            videoPlaceholder.classList.remove('hidden');
+            liveVideo.classList.add('hidden');
+            
+            fetch('/select_camera', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ camera_id: selectedCameraId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentCameraId = selectedCameraId;
+                    
+                    // Forzar recarga del stream
+                    const newStreamUrl = videoStreamUrl + '?' + new Date().getTime();
+                    liveVideo.src = newStreamUrl;
+                    
+                    // Mostrar el video después de un breve retraso
+                    setTimeout(() => {
+                        liveVideo.classList.remove('hidden');
+                        videoPlaceholder.classList.add('hidden');
+                        updateCameraStatus(true);
+                        showNotification('Cámara conectada', `Cámara ${selectedCameraId} activa`);
+                    }, 500);
+                    
+                    // Aplicar ajustes actuales
+                    updateCameraSettings();
+                } else {
+                    videoPlaceholder.innerHTML = `
+                        <div class="text-center">
+                            <div class="text-red-500 text-5xl mb-4">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <p class="text-xl font-medium">Error de conexión</p>
+                            <p class="text-sm mt-2">${data.error || 'No se pudo conectar a la cámara'}</p>
+                        </div>
+                    `;
+                    updateCameraStatus(false);
+                }
+            })
+            .catch(error => {
+                videoPlaceholder.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-red-500 text-5xl mb-4">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <p class="text-xl font-medium">Error de conexión</p>
+                        <p class="text-sm mt-2">${error.message || 'Error en la comunicación'}</p>
+                    </div>
+                `;
+                updateCameraStatus(false);
+            });
+        }
+        
+        // Actualizar ajustes de la cámara
+        function updateCameraSettings() {
+            if (!isCameraConnected) return;
+            
+            const settings = {
+                resolution: resolutionSelect.value,
+                brightness: parseInt(brightnessSlider.value),
+                contrast: parseInt(contrastSlider.value),
+                saturation: parseInt(saturationSlider.value),
+                sharpness: parseInt(sharpnessSlider.value),
+                exposure: parseFloat(exposureSlider.value),
+                filter: document.querySelector('.filter-option.active').dataset.filter,
+                overlay_timestamp: timestampToggle.checked
+            };
+            
+            fetch('/update_settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(settings)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Error actualizando ajustes:', data.error);
+                }
+            });
+        }
+        
+        // Capturar foto
+        function capturePhoto() {
+            if (!isCameraConnected) {
+                showNotification('Error', 'Conecta una cámara primero');
+                return;
+            }
+            
+            const filename = filenamePrefix.value || 'photo';
+            
+            fetch('/capture', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'photo',
+                    filename: filename
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Foto capturada', data.message);
+                } else {
+                    showNotification('Error', data.error);
+                }
+            });
+        }
+        
+        // Iniciar/detener grabación de video
+        function toggleVideoRecording() {
+            if (!isCameraConnected) {
+                showNotification('Error', 'Conecta una cámara primero');
+                return;
+            }
+            
+            if (isRecording) {
+                // Detener grabación
+                fetch('/capture', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        type: 'video',
+                        action: 'stop'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isRecording = false;
+                        recordVideoBtn.classList.remove('recording-active');
+                        recordVideoBtn.classList.remove('bg-gray-600');
+                        recordVideoBtn.classList.add('bg-red-600');
+                        showNotification('Grabación detenida', data.message);
+                    } else {
+                        showNotification('Error', data.error);
+                    }
+                });
+            } else {
+                // Iniciar grabación
+                const filename = filenamePrefix.value || 'video';
+                
+                fetch('/capture', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        type: 'video',
+                        action: 'start',
+                        filename: filename
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isRecording = true;
+                        recordVideoBtn.classList.remove('bg-red-600');
+                        recordVideoBtn.classList.add('bg-gray-600', 'recording-active');
+                        showNotification('Grabación iniciada', data.message);
+                    } else {
+                        showNotification('Error', data.error);
+                    }
+                });
+            }
+        }
+        
+        // Iniciar/detener timelapse
+        function toggleTimelapse() {
+            if (!isCameraConnected) {
+                showNotification('Error', 'Conecta una cámara primero');
+                return;
+            }
+            
+            if (isTimelapseActive) {
+                // Detener timelapse
+                isTimelapseActive = false;
+                timelapseBtn.classList.remove('timelapse-active');
+                showNotification('Timelapse detenido', 'Captura de timelapse finalizada');
+            } else {
+                // Iniciar timelapse
+                const filename = filenamePrefix.value || 'timelapse';
+                const interval = parseInt(timelapseInterval.value) || 5;
+                const duration = parseInt(timelapseDuration.value) || 60;
+                
+                fetch('/capture', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        type: 'timelapse',
+                        filename: filename,
+                        interval: interval,
+                        duration: duration
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isTimelapseActive = true;
+                        timelapseBtn.classList.add('timelapse-active');
+                        showNotification('Timelapse iniciado', data.message);
+                    } else {
+                        showNotification('Error', data.error);
+                    }
+                });
+            }
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar estado
+            updateCameraStatus(false);
+            
+            // Cargar cámaras al iniciar
+            loadCameras();
+            
+            // Filtros de color
+            filterOptions.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    filterOptions.forEach(f => f.classList.remove('active'));
+                    this.classList.add('active');
+                    updateCameraSettings();
+                });
+            });
+            
+            // Conectar/desconectar cámara
+            connectBtn.addEventListener('click', toggleCameraConnection);
+            
+            // Actualizar lista de cámaras
+            refreshBtn.addEventListener('click', loadCameras);
+            
+            // Cambio de resolución
+            resolutionSelect.addEventListener('change', updateCameraSettings);
+            
+            // Sliders de ajustes
+            brightnessSlider.addEventListener('input', function() {
+                brightnessValue.textContent = this.value;
+                updateCameraSettings();
+            });
+            
+            contrastSlider.addEventListener('input', function() {
+                contrastValue.textContent = this.value;
+                updateCameraSettings();
+            });
+            
+            saturationSlider.addEventListener('input', function() {
+                saturationValue.textContent = this.value;
+                updateCameraSettings();
+            });
+            
+            sharpnessSlider.addEventListener('input', function() {
+                sharpnessValue.textContent = this.value;
+                updateCameraSettings();
+            });
+            
+            exposureSlider.addEventListener('input', function() {
+                exposureValue.textContent = this.value;
+                updateCameraSettings();
+            });
+            
+            // Botones de captura
+            capturePhotoBtn.addEventListener('click', capturePhoto);
+            recordVideoBtn.addEventListener('click', toggleVideoRecording);
+            timelapseBtn.addEventListener('click', toggleTimelapse);
+            
+            // Timestamp toggle
+            timestampToggle.addEventListener('change', updateCameraSettings);
+            
+            // Inicializar valores de los sliders
+            brightnessValue.textContent = brightnessSlider.value;
+            contrastValue.textContent = contrastSlider.value;
+            saturationValue.textContent = saturationSlider.value;
+            sharpnessValue.textContent = sharpnessSlider.value;
+            exposureValue.textContent = exposureSlider.value;
+            
+            // Establecer carpeta destino
+            browseBtn.addEventListener('click', function() {
+                // En una aplicación real, aquí se implementaría un selector de archivos
+                const newPath = prompt("Introduce la ruta de la carpeta destino:", savePath.value);
+                if (newPath) {
+                    savePath.value = newPath;
+                    fetch('/set_save_path', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ path: newPath })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification('Carpeta actualizada', data.message);
+                        } else {
+                            showNotification('Error', data.error);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
