@@ -18,24 +18,27 @@ CamControl/
 
 ## Explicación de la estructura:
 
-app.py - El corazón de la aplicación:
+### app.py - El corazón de la aplicación:
 Maneja todas las rutas de Flask
 Gestiona la detección y control de cámaras
 Procesa los frames de video
 Implementa la lógica de captura (fotos, videos, timelapse)
 Administra los recursos y evita fugas de memoria
 Incluye argumentos para especificar el puerto (--port)
-templates/index.html - Interfaz de usuario completa:
+
+### templates/index.html - Interfaz de usuario completa:
 HTML con Tailwind CSS para estilos modernos
 CSS integrado con efectos visuales avanzados
 JavaScript completo para interactuar con el backend
 Diseño responsive y optimizado para control de cámara
 Previsualizaciones de filtros con iconos representativos
-captures/ - Directorio de capturas:
+
+### captures/ - Directorio de capturas:
 Se crea automáticamente al iniciar la aplicación
 Almacena todas las fotos, videos y timelapses
 La ruta puede cambiarse desde la interfaz web
-requirements.txt - Dependencias:
+
+### requirements.txt - Dependencias:
 ```text
 flask
 opencv-python
@@ -69,7 +72,8 @@ Notificaciones emergentes
 Animaciones sutiles para acciones
 Previsualización de filtros con iconos
 Diseño oscuro con contraste adecuado
-Instrucciones de ejecución:
+
+## Instrucciones de ejecución:
 
 Instalar dependencias:
 ```bash
