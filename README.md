@@ -1,14 +1,14 @@
-# CamControl
+# Seb-CamControl
 ## 🌐 Web Camera Control Application
 
-CamControl is a modern web application built with Python and Flask that enables full control of USB and integrated cameras.
+Seb-CamControl is a modern web application built with Python and Flask that enables full control of USB and integrated cameras.
 
 ---
 
 ## 📁 Project Structure
 
 ```text
-CamControl/
+Seb-CamControl/
 │
 ├── app.py                 # Main Flask app script
 │
@@ -138,17 +138,17 @@ The unified single-file HTML interface simplifies deployment while maintaining h
 
 ---
 
-# CamControl
+# Seb-CamControl
 ## 🌐 Aplicación Web de Control de Cámaras
 
-CamControl es una aplicación web moderna construida con Python y Flask que permite el control completo de cámaras USB e integradas.
+Seb-CamControl es una aplicación web moderna construida con Python y Flask que permite el control completo de cámaras USB e integradas.
 
 ---
 
 ## 📁 Estructura del Proyecto
 
 ```text
-CamControl/
+Seb-CamControl/
 │
 ├── app.py                 # Script principal de la aplicación Flask
 │
